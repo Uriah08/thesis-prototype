@@ -1,103 +1,79 @@
-import Image from "next/image";
+"use client"
+
+import Loading from "@/components/ui/loading";
+import { useSession } from "next-auth/react";
+import useVapi from "@/components/hooks/use-vapi";
+import { Button } from "@/components/ui/button";
+import ToggleTheme from "@/components/ui/toggle-theme";
+import { toast } from "sonner";
+
+const assistantOptions = {
+  name: "VCommerce",
+  firstMessage: "Hi! This is VCommerce assistant speaking, how can I help you?",
+  transcriber: {
+    provider: "deepgram",
+    model: "nova-2",
+    language: "en-US",
+  },
+  voice: {
+    provider: "playht",
+    voiceId: "jennifer",
+  },
+  model: {
+    provider: "openai",
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "system",
+        content: `You're the voice assistant for V-Commerce — a super cool website that helps online stores add voice agents to their site. You're here to help visitors navigate the V-Commerce website and answer their questions.
+
+            Your main job is to guide users around the site and tell them what V-Commerce is all about. V-Commerce builds smart voice agents for e-commerce businesses. These agents can help online shoppers place orders, ask questions, track deliveries, and more — all using just their voice.
+
+            Here’s what you can help users with:
+            1) Explaining what V-Commerce does (voice agents for e-commerce)
+            2) Directing them to different sections like "How it works", "Pricing", "Features", or "Get Started"
+            3) Helping them understand the benefits of adding a voicebot to their store
+            4) Redirecting them to sign up, contact support, or book a demo
+
+            If the user asks about something outside the website or voice agents, just casually bring the conversation back to exploring the site or learning more about V-Commerce.
+
+            Keep your tone super casual and witty. Don't be too formal — sound like a friendly, helpful buddy who knows their stuff. Use phrases like "Well...", "Umm...", or "Lemme think..." to make it feel real.
+
+            Always keep your replies short and snappy — this is a voice conversation, so don’t ramble. Once the user gets the info they need or gets where they want to go, wrap it up naturally with something like “Alrighty, talk to you later!” or “Catch ya on the next click!”
+
+            Just remember: your only job is to help users understand V-Commerce and guide them around the site. That’s it. Keep it fun and simple!`
+      },
+    ],
+  },
+};
 
 export default function Home() {
+  const { status } = useSession();
+  const { messages, latestMessage, callStatus, isCallInactiveOrFinished, handleDisconnect, handleCall } = useVapi({assistantOptions})
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <>
+    {status === "loading" ? (
+      <div className='h-screen w-full flex items-center justify-center'>
+        <Loading/>
+      </div>
+    ) : (
+      <div className='h-full w-full flex justify-center'>
+        <div className='absolute'><h1>Hello</h1><ToggleTheme/></div>
+        <div className='max-w-[1200px] h-screen w-full flex items-center justify-center'>
+          {messages.length  > 0 && (
+            <div>{latestMessage}</div>
+          )}
+          {callStatus !== "ACTIVE" ? (
+            <Button className="cursor-pointer" onClick={handleCall}>{isCallInactiveOrFinished ? 'Call': '. . .'}</Button>
+          ): (
+            <Button className="cursor-pointer" onClick={handleDisconnect}>End</Button>
+          )}
+          <Button onClick={() => toast("Hello",{
+            description: "This is a toast message",
+          })}>Toggle</Button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
+    )}
+    </>
   );
 }
