@@ -4,57 +4,58 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useCreateAgentMutation } from '@/store/api'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 const Step2 = () => {
   const router = useRouter()
-  const [createAgent] = useCreateAgentMutation()
 
-  const [agentName, setAgentName] = useState('')
-  const [greetings, setGreetings] = useState('')
-  const [isMounted, setIsMounted] = useState(false)
+  const [configuration, setConfiguration] = useState('')
+  const [fallback, setFallback] = useState('')
+  const [isValid, setIsValid] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
-    const storedAgentName = localStorage.getItem('agentName')
-    const storedGreetings = localStorage.getItem('greetings')
+      setConfiguration(localStorage.getItem('configuration') || '')
+      setFallback(localStorage.getItem('fallback') || '')
+      setHasMounted(true)
+    }, [])
 
-    if (!storedAgentName?.trim() || !storedGreetings?.trim()) {
-      router.push('/agents/create/step-1')
-    } else {
-      setAgentName(storedAgentName)
-      setGreetings(storedGreetings)
-      setIsMounted(true)
+  useEffect(() => {
+      setIsValid(configuration.trim() !== '' && fallback.trim() !== '')
+    }, [configuration, fallback])
+  
+    const handleNext = () => {
+      localStorage.setItem('configuration', configuration)
+      localStorage.setItem('fallback', fallback)
+      router.push('/agents/create/step-2')
     }
-  }, [router])
-
-  const handleCreate = async () => {
-    try {
-      await createAgent({
-        agentName,
-        greetings,
-      }).unwrap()
-
-      localStorage.removeItem('agentName')
-      localStorage.removeItem('greetings')
-
-      router.push('/agents')
-    } catch (err) {
-      console.error('Failed to create agent:', err)
-    }
-  }
-
-  if (!isMounted) return null
+  
+    if (!hasMounted) return null
 
   return (
     <div className="flex flex-col gap-2 max-w-[500px] w-full mx-auto mt-10">
+      <h1 className="text-sm mt-5">Cofiguration</h1>
+        <Textarea
+          placeholder="Enter voice settings and other configurations here."
+          className="text-sm w-full resize-none"
+          value={configuration}
+          onChange={(e) => setConfiguration(e.target.value)}
+        />
+        <h1 className="text-sm mt-5">Fallback</h1>
+        <Input
+          placeholder="I'm sorry, Could you please repeat?"
+          className="w-full text-sm"
+          value={fallback}
+          onChange={(e) => setFallback(e.target.value)}
+        />
       <div className="flex justify-between mt-5">
-        <Link href="/agents/create/step-1" className="w-fit self-start cursor-pointer">
+        <Link href="/agents/create/step-1" className="w-fit cursor-pointer">
           <Button className="cursor-pointer">Previous</Button>
         </Link>
-
-        <Button className="cursor-pointer" onClick={handleCreate}>
-          Create
-        </Button>
+        <Link href="/agents/create/step-3" className="w-fit cursor-pointer">
+          <Button disabled={!isValid} onClick={handleNext} className="cursor-pointer">Next</Button>
+        </Link>
       </div>
     </div>
   )

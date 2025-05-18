@@ -58,6 +58,7 @@ const CreateAgentPage = ({ children }: LayoutProps) => {
                 </div>
             </div>
         </div>
+        <h1 className='text-center text-xl font-semibold mt-10'>Introduction</h1>
           {children}
         </div>
     </div>
