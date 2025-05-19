@@ -20,6 +20,7 @@ import {
 import Link from 'next/link'
 import { Textarea } from '@/components/ui/textarea'
 import { Slider } from '@/components/ui/slider'
+import { useRouter } from 'next/navigation'
 
 const voices = [
   {
@@ -45,13 +46,38 @@ const voices = [
 ]
 
 const Step3 = () => {
+    const router = useRouter()
     const [open, setOpen] = React.useState(false)
     const [value, setValue] = React.useState("")
 
     const [voiceType, setVoiceType] = useState('')
-    const [fallback, setFallback] = useState('')
+    const [voiceAggression, setVoiceAggression] = useState(0)
+    const [content, setContent] = useState('')
     const [isValid, setIsValid] = useState(false)
     const [hasMounted, setHasMounted] = useState(false)
+
+    useEffect(() => {
+      const storedVoice = localStorage.getItem('voiceType') || ''
+      setVoiceType(storedVoice)
+      setValue(storedVoice)
+      setVoiceType(localStorage.getItem('voiceType') || '')
+      setVoiceAggression(Number(localStorage.getItem('voiceAggression')) || 0)
+      setContent(localStorage.getItem('content') || '')
+      setHasMounted(true)
+    }, [])
+
+    useEffect(() => {
+          setIsValid(voiceType.trim() !== '' && voiceAggression !== null && content.trim() !== '')
+        }, [voiceType, voiceAggression, content])
+      
+        const handleNext = () => {
+          localStorage.setItem('voiceType', voiceType)
+          localStorage.setItem('voiceAggression', voiceAggression.toString())
+          localStorage.setItem('content', content)
+          router.push('/agents/create/step-2')
+        }
+      
+        if (!hasMounted) return null
   return (
     <div className="flex flex-col gap-2 max-w-[500px] w-full mx-auto mt-10">
         <h1 className="text-sm mt-5">Voice Settings</h1>
@@ -81,6 +107,7 @@ const Step3 = () => {
                         value={voice.value}
                         onSelect={(currentValue) => {
                         setValue(currentValue === value ? "" : currentValue)
+                        setVoiceType(currentValue === value ? "" : currentValue)
                         setOpen(false)
                         }}
                     >
@@ -99,19 +126,25 @@ const Step3 = () => {
             </PopoverContent>
         </Popover>
         <h1 className="text-sm mt-5">Voice Aggresion</h1>
-        <Slider defaultValue={[33]} max={100} step={1} />
+        <Slider defaultValue={[0]} max={100} step={1} 
+            value={[voiceAggression]} onValueChange={(value) => {
+                setVoiceAggression(value[0])
+            }}
+        />
 
         <h1 className="text-sm mt-5">Content</h1>
         <Textarea
             placeholder="Enter the content of your bot website here."
             className="text-sm w-full resize-none"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
         />
         <div className="flex justify-between mt-5">
             <Link href="/agents/create/step-2" className="w-fit cursor-pointer">
                 <Button className="cursor-pointer">Previous</Button>
             </Link>
             <Link href="/agents/create/step-4" className="w-fit cursor-pointer">
-                <Button className="cursor-pointer">Next</Button>
+                <Button disabled={!isValid} onClick={handleNext} className="cursor-pointer">Next</Button>
             </Link>
         </div>
     </div>
